@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import { SocialFloat } from "@/components/social-float"
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
@@ -178,6 +179,8 @@ export default function PortfolioPage() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#0a0118]">
+      <SocialFloat />
+
       <div className="fixed inset-0 bg-[#0a0118]">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 animate-mesh-gradient" />
 
