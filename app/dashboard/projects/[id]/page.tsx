@@ -15,7 +15,6 @@ import {
   ExternalLink,
   ListTodo,
   FileSignature,
-  CreditCard,
   Receipt,
 } from "lucide-react"
 import type { Project } from "@/lib/types/database"
@@ -162,15 +161,6 @@ export default async function ProjectDetailPage({
               <div className="pt-4 border-t space-y-4">
                 {contract?.status === "signed" && (
                   <>
-                    {!payment && isOwner && (
-                      <Button asChild variant="outline" className="w-full bg-transparent">
-                        <Link href={`/dashboard/projects/${id}/payment`}>
-                          <CreditCard className="mr-2 h-4 w-4" />
-                          Processar Pagamento
-                        </Link>
-                      </Button>
-                    )}
-
                     {payment && payment.status === "completed" && invoice && (
                       <Button asChild variant="outline" className="w-full bg-transparent">
                         <Link href={`/dashboard/projects/${id}/invoice`}>
