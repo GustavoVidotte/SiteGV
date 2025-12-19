@@ -2,28 +2,29 @@
 
 import type React from "react"
 import { SocialFloat } from "@/components/social-float"
-
-import { useState, useEffect } from "react"
-import Image from "next/image"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Code2,
+  Smartphone,
+  Database,
   Sparkles,
+  ArrowRight,
+  CheckCircle2,
+  Users,
+  MessageCircle,
   Zap,
-  TrendingUp,
-  Menu,
-  X,
+  Folder,
   Mail,
   Phone,
   Instagram,
-  User,
-  Send,
-  CheckCircle,
-  MessageSquare,
-  FolderOpen,
   Briefcase,
 } from "lucide-react"
+import { useState, useEffect } from "react"
+import Image from "next/image"
 import { createClient } from "@/lib/supabase/client"
+import { createBrowserClient } from "@supabase/ssr"
 
 // Interface for projects from database
 interface Project {
@@ -34,6 +35,13 @@ interface Project {
   technologies: string[]
   is_featured: boolean
   display_order: number
+}
+
+interface AboutData {
+  description: string
+  projects_count: number
+  clients_count: number
+  years_experience: number
 }
 
 export default function PortfolioPage() {
@@ -53,6 +61,14 @@ export default function PortfolioPage() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [aboutData, setAboutData] = useState<AboutData>({
+    description:
+      "Somos especializados em criar experiências digitais inovadoras e soluções tecnológicas que transformam negócios.",
+    projects_count: 50,
+    clients_count: 100,
+    years_experience: 5,
+  })
+  const [loadingAbout, setLoadingAbout] = useState(true)
 
   const supabase = createClient()
 
@@ -84,6 +100,44 @@ export default function PortfolioPage() {
   }, [supabase])
 
   useEffect(() => {
+    const fetchAbout = async () => {
+      try {
+        const supabaseBrowser = createBrowserClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        )
+
+        const { data, error } = await supabaseBrowser
+          .from("portfolio_about")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single()
+
+        if (error) {
+          console.error("Error fetching about:", error)
+          return
+        }
+
+        if (data) {
+          setAboutData({
+            description: data.description || aboutData.description,
+            projects_count: data.projects_count || 50,
+            clients_count: data.clients_count || 100,
+            years_experience: data.years_experience || 5,
+          })
+        }
+      } catch (error) {
+        console.error("Error:", error)
+      } finally {
+        setLoadingAbout(false)
+      }
+    }
+
+    fetchAbout()
+  }, [])
+
+  useEffect(() => {
     const observerOptions = {
       threshold: 0.1,
       rootMargin: "0px 0px -50px 0px",
@@ -108,10 +162,10 @@ export default function PortfolioPage() {
   const skills = [
     { name: "React.js", icon: Code2 },
     { name: "Next.js", icon: Zap },
-    { name: "Node.js", icon: TrendingUp },
+    { name: "Node.js", icon: Smartphone },
     { name: "TypeScript", icon: Sparkles },
     { name: "Python", icon: "🐍", isEmoji: true },
-    { name: "PostgreSQL", icon: "🐘", isEmoji: true },
+    { name: "PostgreSQL", icon: Database }, // removed isEmoji: true since Database is a component
     { name: "MongoDB", icon: "🍃", isEmoji: true },
     { name: "Docker", icon: "🐳", isEmoji: true },
     { name: "AWS", icon: "☁️", isEmoji: true },
@@ -230,11 +284,11 @@ export default function PortfolioPage() {
                 <div className="relative">
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-2xl blur-xl opacity-60 group-hover:opacity-100 group-hover:blur-2xl transition-all duration-500" />
                   <Image
-                    src="/images/gv-logo-3d.png"
+                    src="/images/gv-logo-new.png"
                     alt="GV Software"
                     width={55}
                     height={55}
-                    className="relative rounded-xl shadow-2xl group-hover:scale-110 transition-transform duration-300"
+                    className="relative rounded-2xl shadow-2xl group-hover:scale-110 transition-transform duration-300"
                   />
                 </div>
                 <div className="flex flex-col">
@@ -252,7 +306,7 @@ export default function PortfolioPage() {
                   href="#projetos"
                   className="relative group flex items-center gap-2 px-6 py-2 rounded-full bg-white/5 border border-white/10 hover:border-purple-500/50 hover:bg-purple-500/10 transition-all duration-300"
                 >
-                  <FolderOpen className="w-4 h-4 text-purple-400 group-hover:text-purple-300 transition-colors" />
+                  <Folder className="w-4 h-4 text-purple-400 group-hover:text-purple-300 transition-colors" />
                   <span className="text-base font-semibold bg-gradient-to-r from-gray-100 to-purple-200 bg-clip-text text-transparent group-hover:from-purple-300 group-hover:to-pink-300 transition-all duration-300">
                     Portfólio
                   </span>
@@ -278,7 +332,7 @@ export default function PortfolioPage() {
                   className="md:hidden text-white"
                   aria-label="Menu"
                 >
-                  {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+                  {mobileMenuOpen ? <ArrowRight size={28} /> : <Users size={28} />}
                 </button>
               </div>
             </div>
@@ -344,7 +398,8 @@ export default function PortfolioPage() {
           </div>
         </section>
 
-        <section id="sobre" className="py-32 px-6">
+        {/* About Section */}
+        <section id="about" className="py-32 px-6">
           <div className="container mx-auto max-w-6xl">
             <div className="glass-card rounded-3xl p-12 md:p-16 scroll-reveal slide-up">
               <div className="grid md:grid-cols-2 gap-12 items-center">
@@ -352,26 +407,35 @@ export default function PortfolioPage() {
                   <h2 className="text-5xl font-bold text-white mb-4">
                     Sobre a <span className="text-gradient">GV Software</span>
                   </h2>
-                  <p className="text-lg text-gray-300 leading-relaxed">
-                    Somos especializados em criar experiências digitais inovadoras e soluções tecnológicas que
-                    transformam negócios. Com foco em performance, design e resultados, desenvolvemos sistemas completos
-                    do conceito à implementação.
-                  </p>
+                  {loadingAbout ? (
+                    <div className="space-y-4">
+                      <div className="h-4 bg-gray-700/50 rounded animate-pulse"></div>
+                      <div className="h-4 bg-gray-700/50 rounded animate-pulse w-3/4"></div>
+                    </div>
+                  ) : (
+                    <p className="text-lg text-gray-300 leading-relaxed">{String(aboutData.description || "")}</p>
+                  )}
                   <p className="text-lg text-gray-300 leading-relaxed">
                     Nossa missão é tornar a tecnologia acessível e poderosa para empresas de todos os tamanhos,
                     entregando projetos que superam expectativas e geram valor real.
                   </p>
                   <div className="flex gap-4 pt-4">
                     <div className="glass-card rounded-xl p-4 text-center flex-1">
-                      <div className="text-3xl font-bold text-gradient">50+</div>
+                      <div className="text-3xl font-bold text-gradient">
+                        {loadingAbout ? "..." : `${aboutData.projects_count}+`}
+                      </div>
                       <div className="text-sm text-gray-400 mt-1">Projetos</div>
                     </div>
                     <div className="glass-card rounded-xl p-4 text-center flex-1">
-                      <div className="text-3xl font-bold text-gradient">100%</div>
-                      <div className="text-sm text-gray-400 mt-1">Satisfação</div>
+                      <div className="text-3xl font-bold text-gradient">
+                        {loadingAbout ? "..." : `${aboutData.clients_count}+`}
+                      </div>
+                      <div className="text-sm text-gray-400 mt-1">Clientes</div>
                     </div>
                     <div className="glass-card rounded-xl p-4 text-center flex-1">
-                      <div className="text-3xl font-bold text-gradient">5+</div>
+                      <div className="text-3xl font-bold text-gradient">
+                        {loadingAbout ? "..." : `${aboutData.years_experience}+`}
+                      </div>
                       <div className="text-sm text-gray-400 mt-1">Anos</div>
                     </div>
                   </div>
@@ -380,7 +444,7 @@ export default function PortfolioPage() {
                   <div className="aspect-square rounded-3xl bg-gradient-to-br from-purple-600/20 to-blue-600/20 p-1">
                     <div className="w-full h-full rounded-3xl bg-[#0a0118] flex items-center justify-center">
                       <Image
-                        src="/images/gv-logo-3d.png"
+                        src="/images/gv-logo-new.png"
                         alt="GV Software"
                         width={300}
                         height={300}
@@ -429,7 +493,7 @@ export default function PortfolioPage() {
                       className={`w-16 h-16 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}
                     >
                       {skill.isEmoji ? (
-                        <span className="text-4xl">{Icon}</span>
+                        <span className="text-4xl">{Icon as string}</span>
                       ) : (
                         <Icon className="w-8 h-8 text-white" />
                       )}
@@ -457,7 +521,7 @@ export default function PortfolioPage() {
               </div>
             ) : projects.length === 0 ? (
               <div className="text-center py-20">
-                <FolderOpen className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+                <Folder className="w-16 h-16 text-gray-500 mx-auto mb-4" />
                 <p className="text-gray-400 text-lg">Nenhum projeto cadastrado ainda.</p>
               </div>
             ) : (
@@ -517,7 +581,7 @@ export default function PortfolioPage() {
                     <Mail className="w-6 h-6 text-white" />
                   </div>
                   <h3 className="text-lg font-semibold text-white mb-1">E-mail</h3>
-                  <p className="text-gray-400 text-sm">contato.gvsoftware@gmail.com</p>
+                  <p className="text-gray-400">contato.gvsoftware@gmail.com</p>
                 </a>
 
                 <a href="tel:+5517997853416" className="glass-card rounded-xl p-6 hover-lift group">
@@ -544,7 +608,7 @@ export default function PortfolioPage() {
 
               {submitSuccess && (
                 <div className="mb-8 p-4 rounded-xl bg-green-500/20 border border-green-500/50 flex items-center gap-3">
-                  <CheckCircle className="w-6 h-6 text-green-400" />
+                  <CheckCircle2 className="w-6 h-6 text-green-400" />
                   <p className="text-green-400 font-medium">
                     Mensagem enviada com sucesso! Entraremos em contato em breve.
                   </p>
@@ -555,8 +619,8 @@ export default function PortfolioPage() {
                 {/* Linha 1: Nome e Empresa */}
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                    <input
+                    <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                    <Input
                       type="text"
                       name="name"
                       value={formData.name}
@@ -568,7 +632,7 @@ export default function PortfolioPage() {
                   </div>
                   <div className="relative">
                     <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                    <input
+                    <Input
                       type="text"
                       name="company"
                       value={formData.company}
@@ -583,7 +647,7 @@ export default function PortfolioPage() {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                    <input
+                    <Input
                       type="email"
                       name="email"
                       value={formData.email}
@@ -595,7 +659,7 @@ export default function PortfolioPage() {
                   </div>
                   <div className="relative">
                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                    <input
+                    <Input
                       type="tel"
                       name="phone"
                       value={formData.phone}
@@ -609,7 +673,7 @@ export default function PortfolioPage() {
 
                 {/* Linha 3: Assunto */}
                 <div className="relative">
-                  <MessageSquare className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 z-10" />
+                  <MessageCircle className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 z-10" />
                   <select
                     name="subject"
                     value={formData.subject}
@@ -722,7 +786,7 @@ export default function PortfolioPage() {
 
                 {/* Linha 5: Mensagem */}
                 <div>
-                  <textarea
+                  <Textarea
                     name="message"
                     value={formData.message}
                     onChange={handleInputChange}
@@ -746,7 +810,7 @@ export default function PortfolioPage() {
                     </>
                   ) : (
                     <>
-                      <Send className="w-5 h-5 mr-2" />
+                      <ArrowRight className="w-5 h-5 mr-2" />
                       Enviar Mensagem
                     </>
                   )}
@@ -768,9 +832,9 @@ export default function PortfolioPage() {
               {/* Logo e nome */}
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-purple-600/50 to-cyan-500/50 rounded-xl blur-md opacity-50" />
+                  <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/50 to-cyan-500/50 rounded-xl blur-md opacity-50" />
                   <Image
-                    src="/images/gv-logo-3d.png"
+                    src="/images/gv-logo-new.png"
                     alt="GV Software"
                     width={45}
                     height={45}
